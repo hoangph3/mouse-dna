@@ -1,1 +1,1 @@
-# mouse-dynamic-model
+# Mouse Dynamic Model
