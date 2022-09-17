@@ -1,3 +1,4 @@
+from io import StringIO
 import csv
 import os
 
@@ -10,10 +11,21 @@ def process_session(filename, action_file):
     prev_row = None
     n_from = 2
     n_to = 2
-    with open(filename) as csv_file:
-        reader = csv.DictReader(csv_file)
+    with open(filename, encoding='utf-8') as csv_file:
+        reader = csv_file.read()
+        reader = reader.replace('\x00', '')
+        reader = csv.DictReader(StringIO(reader))
         data = []
         for row in reader:
+            # validate
+            valid = True
+            for key in ['client timestamp', 'button', 'state', 'x', 'y']:
+                if not row.get(key, ''):
+                    valid = False
+                    break
+            if not valid:
+                continue
+
             counter = counter + 1
             # Skip duplicate
             if prev_row and prev_row == row:
