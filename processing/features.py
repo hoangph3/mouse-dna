@@ -25,13 +25,13 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
     trajectory = 0
 
     # angles
-    angles = [0]
-    path = [0]
+    angles = []
+    path = []
 
     # velocities
-    vx = [0]
-    vy = [0]
-    v = [0]
+    vx = []
+    vy = []
+    v = []
     for i in range(1, n):
         dx = x[i] - x[i - 1]
         dy = y[i] - y[i - 1]
@@ -66,7 +66,7 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
     min_v = stats.__min(v)
 
     # angular velocity
-    omega = [0]
+    omega = []
     for i in range(1, len(angles)):
         dtheta = angles[i] - angles[i - 1]
         dt = (t[i] - t[i - 1]) or _dt
@@ -78,10 +78,10 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
     min_omega = stats.__min(omega)
 
     # acceleration
-    a = [0]
+    a = []
     acc_time = 0
     cont = True
-    for i in range(1, n-1):
+    for i in range(1, len(v)):
         dv = v[i] - v[i - 1]
         dt = (t[i] - t[i - 1]) or _dt
         if cont and dv > 0:
@@ -96,7 +96,7 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
     min_a = stats.__min(a)
 
     # jerk
-    j = [0]
+    j = []
     for i in range(1, len(a)):
         da = a[i] - a[i - 1]
         dt = (t[i] - t[i - 1]) or _dt
