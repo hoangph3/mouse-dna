@@ -5,7 +5,16 @@ from keeper.environments import SystemEnv
 from . import stats
 
 
-def stats_action_feature(x, y, t, n_from, n_to, action_type):
+def stats_action_feature(data, n_from, n_to, action_type):
+
+    x = []
+    y = []
+    t = []
+    for item in data:
+        x.append(item['x'])
+        y.append(item['y'])
+        t.append(item['t'])
+
     _dt = 0.01
     n = len(x)
     if n < SystemEnv.MIN_ACTION_LENGTH:
@@ -17,7 +26,10 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
     t = list(map(float, t))
 
     for i in range(1, n):
-        if x[i] > SystemEnv.X_LIMIT or y[i] > SystemEnv.Y_LIMIT:
+        if x[i] > SystemEnv.X_MAX or y[i] > SystemEnv.Y_MAX:
+            x[i] = x[i - 1]
+            y[i] = y[i - 1]
+        if x[i] < SystemEnv.X_MIN or y[i] < SystemEnv.Y_MIN:
             x[i] = x[i - 1]
             y[i] = y[i - 1]
 
@@ -156,7 +168,7 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
         "mean_curve": mean_curve, "sd_curve": sd_curve, "max_curve": max_curve, "min_curve": min_curve,
         "action_type": action_type,
         "elapsed_time": elapsed_time,
-        "trajectory_length": trajectory,
+        "traveled_distance": trajectory,
         "dist_end_to_end_line": dist_end_to_end_line,
         "direction": direction,
         "straightness": straightness,
@@ -168,6 +180,9 @@ def stats_action_feature(x, y, t, n_from, n_to, action_type):
         "n_from": n_from,
         "n_to": n_to
     }
+    data_fields = ["action_type", "traveled_distance", "elapsed_time", "direction"]
+    feature = {k: v for k, v in feature.items() if k in data_fields}
+
     return feature
 
 
@@ -183,9 +198,9 @@ def __get_direction(theta):
         "6": [-math.pi/2, -math.pi/4],
         "7": [-math.pi/4, 0]
     }
-    for direction, (min_theta, max_theta) in directions.items():
+    for key, (min_theta, max_theta) in directions.items():
         if min_theta < theta < max_theta:
-            return int(direction)
+            return int(key)
     return direction
 
 

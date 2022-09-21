@@ -27,8 +27,11 @@ class SystemEnv:
             self.__MM_CODE: str = env_vars["MM_CODE"]
             self.__PC_CODE: str = env_vars["PC_CODE"]
             self.__DD_CODE: int = env_vars["DD_CODE"]
-            self.__X_LIMIT: int = env_vars["X_LIMIT"]
-            self.__Y_LIMIT: int = env_vars["Y_LIMIT"]
+            self.__X_MIN: int = env_vars["X_MIN"]
+            self.__Y_MIN: int = env_vars["Y_MIN"]
+            self.__X_MAX: int = env_vars["X_MAX"]
+            self.__Y_MAX: int = env_vars["Y_MAX"]
+            self.__DEBUG: int = env_vars["DEBUG"]
 
     @ClassProperty
     def EXPIRATION_ACTION_TIME(cls):
@@ -55,9 +58,21 @@ class SystemEnv:
         return cls.get_instance().__DD_CODE
 
     @ClassProperty
-    def X_LIMIT(cls):
-        return cls.get_instance().__X_LIMIT
+    def X_MIN(cls):
+        return cls.get_instance().__X_MIN
 
     @ClassProperty
-    def Y_LIMIT(cls):
-        return cls.get_instance().__Y_LIMIT
+    def Y_MIN(cls):
+        return cls.get_instance().__Y_MIN
+
+    @ClassProperty
+    def X_MAX(cls):
+        return cls.get_instance().__X_MAX
+
+    @ClassProperty
+    def Y_MAX(cls):
+        return cls.get_instance().__Y_MAX
+
+    @ClassProperty
+    def DEBUG(cls):
+        return cls.get_instance().__DEBUG

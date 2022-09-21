@@ -54,23 +54,26 @@ def process_session(filename, action_file):
 
                 # A Drag Drop Action (4) ends here.
                 # It can be a compound action: {MM}*DD - several MM actions followed by a DD action
-                if prev_row and prev_row['state'] == 'Drag':
+                if prev_row and prev_row['state'] != 'Pressed':
                     n_to = counter
+                    # print("DD", data)
                     actions.process_drag_actions(data, action_file, n_from, n_to)
 
                 # A Point Click Action (3) ends here.
                 # It can be a compound action: {MM}*PC - several MM actions followed by a DD action
                 if prev_row and prev_row['state'] == 'Pressed':
                     n_to = counter
+                    # print("PC", data)
                     actions.process_click_actions(data, action_file, n_from, n_to)
 
                 # It starts a new action
                 data = []
                 n_from = n_to + 1
             else:
-                if int(item['x']) < SystemEnv.X_LIMIT or int(item['y']) < SystemEnv.Y_LIMIT:
+                if SystemEnv.X_MIN < int(item['x']) < SystemEnv.X_MAX or SystemEnv.Y_MIN < int(item['y']) < SystemEnv.Y_MAX:
                     data.append(item)
             prev_row = row
         n_to = counter
+        # print("MM", data)
         actions.process_move_actions(data, action_file, n_from, n_to)
         return
