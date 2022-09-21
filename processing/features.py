@@ -1,3 +1,4 @@
+from collections import defaultdict
 import numpy as np
 import math
 
@@ -5,12 +6,12 @@ from keeper.environments import SystemEnv
 from . import stats
 
 
-def stats_action_feature(data, n_from, n_to, action_type):
+def stats_action_feature(action_data, n_from, n_to, action_type):
 
     x = []
     y = []
     t = []
-    for item in data:
+    for item in action_data:
         x.append(item['x'])
         y.append(item['y'])
         t.append(item['t'])
@@ -218,3 +219,36 @@ def __get_largest_deviation(x, y):
     if den > 0:
         d_max /= den
     return d_max
+
+
+def stats_session_feature(session_data):
+    """
+    [
+        {"action_type": 1, "traveled_distance": 100, "elapsed_time": 10, "direction": 5},
+        {"action_type": 3, "traveled_distance": 200, "elapsed_time": 15, "direction": 3},
+        ...
+    ]
+    """
+    # Movement speed compared with traveled distance (MSD): 1-100, 101-200, 201-300, ..., 901-1000
+    MSD = defaultdict(lambda: defaultdict(list))
+    for action_data in session_data:
+        if action_data["traveled_distance"] < 1 or action_data["traveled_distance"] > 1000:
+            continue
+        idx = math.ceil(action_data["traveled_distance"] / 1000 * 10)
+        MSD[str(idx)]["traveled_distance"].append(action_data["traveled_distance"])
+        MSD[str(idx)]["elapsed_time"].append(action_data["elapsed_time"])
+    for k, v in MSD.items():
+        MSD[k]["average_speed"] = sum(MSD[k]["traveled_distance"]) / sum(MSD[k]["elapsed_time"])
+    MSD = [v["average_speed"] for k, v in MSD.items()]
+
+    # Periodic sampling traveled_distance
+    min_x = min(session_data, key=lambda x: x["traveled_distance"])
+    max_x = max(session_data, key=lambda x: x["traveled_distance"])
+    num_points = 12
+    delta_x = (max_x - min_x) / (num_points - 1)
+    TD = [min_x]
+    for i in range(1, num_points):
+        TD.append(delta_x + TD[i - 1])
+
+    # Average movement speed per movement direction (MDA): 0, 1, 2, 3, 4, 5, 6, 7, 8
+
