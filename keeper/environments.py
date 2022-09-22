@@ -21,17 +21,18 @@ class SystemEnv:
             with open("./env.json") as f:
                 env_vars = json.load(f)
 
-            self.__EXPIRATION_ACTION_TIME: str = env_vars["EXPIRATION_ACTION_TIME"]
-            self.__MIN_ACTION_LENGTH: str = env_vars["MIN_ACTION_LENGTH"]
-            self.__CURVE_THRESHOLD: int = env_vars["CURVE_THRESHOLD"]
-            self.__MM_CODE: str = env_vars["MM_CODE"]
-            self.__PC_CODE: str = env_vars["PC_CODE"]
+            self.__EXPIRATION_ACTION_TIME: int = env_vars["EXPIRATION_ACTION_TIME"]
+            self.__MIN_ACTION_LENGTH: int = env_vars["MIN_ACTION_LENGTH"]
+            self.__MAX_SESSION_LENGTH: int = env_vars["MAX_SESSION_LENGTH"]
+            self.__CURVE_THRESHOLD: float = env_vars["CURVE_THRESHOLD"]
+            self.__MM_CODE: int = env_vars["MM_CODE"]
+            self.__PC_CODE: int = env_vars["PC_CODE"]
             self.__DD_CODE: int = env_vars["DD_CODE"]
             self.__X_MIN: int = env_vars["X_MIN"]
             self.__Y_MIN: int = env_vars["Y_MIN"]
             self.__X_MAX: int = env_vars["X_MAX"]
             self.__Y_MAX: int = env_vars["Y_MAX"]
-            self.__DEBUG: int = env_vars["DEBUG"]
+            self.__DEBUG: bool = env_vars["DEBUG"]
 
     @ClassProperty
     def EXPIRATION_ACTION_TIME(cls):
@@ -40,6 +41,10 @@ class SystemEnv:
     @ClassProperty
     def MIN_ACTION_LENGTH(cls):
         return cls.get_instance().__MIN_ACTION_LENGTH
+
+    @ClassProperty
+    def MAX_SESSION_LENGTH(cls):
+        return cls.get_instance().__MAX_SESSION_LENGTH
 
     @ClassProperty
     def CURVE_THRESHOLD(cls):

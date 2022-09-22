@@ -19,7 +19,7 @@ def process_session(filename, action_file):
         for row in reader:
             # validate
             valid = True
-            for key in ['client timestamp', 'button', 'state', 'x', 'y']:
+            for key in ['client_timestamp', 'button', 'state', 'x', 'y']:
                 if not row.get(key, ''):
                     valid = False
                     break
@@ -34,7 +34,7 @@ def process_session(filename, action_file):
             item = {
                 "x": int(row['x']),
                 "y": int(row['y']),
-                "t": float(row['client timestamp']),
+                "t": float(row['client_timestamp']),
                 "button": row['button'],
                 "state": row['state']
             }

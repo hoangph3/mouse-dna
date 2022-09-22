@@ -78,7 +78,7 @@ def process_drag_actions(data, action_file, n_from, n_to):
 
     for item in data:
         counter += 1
-        if item['button'] == 'NoButton' and item['state'] == 'Move':
+        if item['button'] == 'None' and item['state'] == 'Move':
             if item['t'] - prev_time > SystemEnv.EXPIRATION_ACTION_TIME:
                 stop = n_from + counter - 2
                 if len(new_data) > SystemEnv.MIN_ACTION_LENGTH:
@@ -110,6 +110,10 @@ def process_drag_actions(data, action_file, n_from, n_to):
             if SystemEnv.DEBUG:
                 print("DD", new_data)
             action_file.write("{}\n".format(json.dumps(feature)))
+
+        # handle Drag event
+        if item['state'] == 'Drag':
+            new_data.append(item)
 
         prev_time = item['t']
     return

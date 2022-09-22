@@ -221,6 +221,20 @@ def __get_largest_deviation(x, y):
     return d_max
 
 
+def min_max_scaler(x):
+    x = np.array(x)
+    x = (x - np.min(x)) / (np.max(x) - np.min(x))
+    return x.tolist()
+
+
+def max_scaler(x):
+    x = np.array(x)
+    if np.max(x):
+        x = x / np.max(x)
+        return x.tolist()
+    return x.tolist()
+
+
 def stats_session_feature(session_data):
     """
     [
@@ -229,7 +243,16 @@ def stats_session_feature(session_data):
         ...
     ]
     """
-    # Movement speed compared with traveled distance (MSD): 1-100, 101-200, 201-300, ..., 901-1000
+    # Periodic sampling traveled_distance
+    min_x = min(session_data, key=lambda x: x["traveled_distance"])["traveled_distance"]
+    max_x = max(session_data, key=lambda x: x["traveled_distance"])["traveled_distance"]
+    num_points = 12
+    delta_x = (max_x - min_x) / (num_points - 1)
+    TD = [min_x]
+    for i in range(1, num_points):
+        TD.append(delta_x + TD[i - 1])
+
+    # Average movement speed compared with traveled distance (MSD): 1-100, 101-200, 201-300, ..., 901-1000
     MSD = defaultdict(lambda: defaultdict(list))
     for action_data in session_data:
         if action_data["traveled_distance"] < 1 or action_data["traveled_distance"] > 1000:
@@ -237,18 +260,75 @@ def stats_session_feature(session_data):
         idx = math.ceil(action_data["traveled_distance"] / 1000 * 10)
         MSD[str(idx)]["traveled_distance"].append(action_data["traveled_distance"])
         MSD[str(idx)]["elapsed_time"].append(action_data["elapsed_time"])
-    for k, v in MSD.items():
-        MSD[k]["average_speed"] = sum(MSD[k]["traveled_distance"]) / sum(MSD[k]["elapsed_time"])
-    MSD = [v["average_speed"] for k, v in MSD.items()]
+    for k in MSD:
+        MSD[k]["average_speed"] = sum(MSD[k]["traveled_distance"]) / sum(MSD[k]["elapsed_time"]) if len(MSD[k]["elapsed_time"]) else 0
+    MSD = [MSD[str(idx)]["average_speed"] if MSD[str(idx)]["average_speed"] else 0 for idx in range(1, 11)]
 
-    # Periodic sampling traveled_distance
-    min_x = min(session_data, key=lambda x: x["traveled_distance"])
-    max_x = max(session_data, key=lambda x: x["traveled_distance"])
-    num_points = 12
-    delta_x = (max_x - min_x) / (num_points - 1)
-    TD = [min_x]
-    for i in range(1, num_points):
-        TD.append(delta_x + TD[i - 1])
+    # Average movement speed per movement direction (MDA): 1, 2, 3, 4, 5, 6, 7, 8
+    MDA = defaultdict(lambda: defaultdict(list))
+    for action_data in session_data:
+        idx = action_data["direction"]
+        MDA[str(idx)]["traveled_distance"].append(action_data["traveled_distance"])
+        MDA[str(idx)]["elapsed_time"].append(action_data["elapsed_time"])
+    for k in MDA:
+        MDA[k]["average_speed"] = sum(MDA[k]["traveled_distance"]) / sum(MDA[k]["elapsed_time"]) if len(MDA[k]["elapsed_time"]) else 0
+    MDA = [MDA[str(idx)]["average_speed"] if MDA[str(idx)]["average_speed"] else 0 for idx in range(1, 9)]
 
-    # Average movement speed per movement direction (MDA): 0, 1, 2, 3, 4, 5, 6, 7, 8
+    # Movement Direction Histogram (MDH): 1, 2, 3, 4, 5, 6, 7, 8
+    MDH = defaultdict(int)
+    for action_data in session_data:
+        idx = action_data["direction"]
+        MDH[str(idx)] += 1
+    MDH = [MDH[str(idx)] / len(session_data) if MDH[str(idx)] else 0 for idx in range(1, 9)]
 
+    # Average movement speed per type of action (ATA): MM, PC, DD
+    ATA = defaultdict(lambda: defaultdict(list))
+    for action_data in session_data:
+        idx = action_data["action_type"]
+        ATA[str(idx)]["traveled_distance"].append(action_data["traveled_distance"])
+        ATA[str(idx)]["elapsed_time"].append(action_data["elapsed_time"])
+    for k in ATA:
+        ATA[k]["average_speed"] = sum(ATA[k]["traveled_distance"]) / sum(ATA[k]["elapsed_time"]) if len(ATA[k]["elapsed_time"]) else 0
+    ATA = [ATA[str(idx)]["average_speed"] if ATA[str(idx)]["average_speed"] else 0 for idx in [SystemEnv.MM_CODE, SystemEnv.PC_CODE, SystemEnv.DD_CODE]]
+
+    # Action Type Histogram (ATH): MM, PC, DD
+    ATH = defaultdict(int)
+    for action_data in session_data:
+        idx = action_data["action_type"]
+        ATH[str(idx)] += 1
+    ATH = [ATH[str(idx)] / len(session_data) if ATH[str(idx)] else 0 for idx in [SystemEnv.MM_CODE, SystemEnv.PC_CODE, SystemEnv.DD_CODE]]
+
+    # Traveled Distance Histogram (TDH): 1-100, 101-200, 201-300, ..., 901-1000
+    TDH = defaultdict(int)
+    for action_data in session_data:
+        if action_data["traveled_distance"] < 1 or action_data["traveled_distance"] > 1000:
+            continue
+        idx = math.ceil(action_data["traveled_distance"] / 1000 * 10)
+        TDH[str(idx)] += 1
+    TDH = [TDH[str(idx)] / len(session_data) if TDH[str(idx)] else 0 for idx in range(1, 11)]
+
+    # Movement Elapsed Time Histogram (MTH): 0-0.5, 0.5-1.0, 1.0-1.5, ..., 4.5-5.0
+    MTH = defaultdict(int)
+    for action_data in session_data:
+        idx = math.ceil(action_data["elapsed_time"] / 5 * 10)
+        MTH[str(idx)] += 1
+    MTH = [MTH[str(idx)] / len(session_data) if MTH[str(idx)] else 0 for idx in range(1, 11)]
+
+    # Max normalize
+    TD = max_scaler(TD)
+    MSD = max_scaler(MSD)
+    MDA = max_scaler(MDA)
+    ATA = max_scaler(ATA)
+
+    if SystemEnv.DEBUG:
+        print("TD:", TD)
+        print("MSD:", MSD)
+        print("MDA:", MDA)
+        print("MDH:", MDH)
+        print("ATA:", ATA)
+        print("ATH:", ATH)
+        print("TDH:", TDH)
+        print("MTH:", MTH)
+
+    feature = np.concatenate([TD, MSD, MDA, MDH, ATA, ATH, TDH, MTH])
+    return feature
